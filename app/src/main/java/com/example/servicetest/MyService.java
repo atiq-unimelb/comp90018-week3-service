@@ -10,6 +10,10 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 public class MyService extends Service {
 
     public MyService() {
@@ -38,6 +42,10 @@ public class MyService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        EventBus.getDefault().register(this);
+        EventBus.getDefault().post(new MessageEvent(MessageEvent.SERVICE, "Hello from Service!"));
+
         Log.d("MyService", "onCreate executed");
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);
@@ -53,15 +61,23 @@ public class MyService extends Service {
     }
 
     @Override
+    public void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+        Log.d("MyService", "onDestroy executed");
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("MyService", "onStartCommand executed");
         return super.onStartCommand(intent, flags, startId);
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d("MyService", "onDestroy executed");
+
+    @Subscribe
+    public void onMessageEventService(MessageEvent event) {
+        if (event.type == MessageEvent.ACTIVITY)
+            Log.d("MyService", "Activity Message Content: " + event.message);
     }
 
 }

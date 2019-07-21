@@ -10,6 +10,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private MyService.DownloadBinder downloadBinder;
@@ -40,7 +44,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Button unbindService = (Button) findViewById(R.id.unbind_service);
         bindService.setOnClickListener(this);
         unbindService.setOnClickListener(this);
+
+        EventBus.getDefault().register(this);
     }
+
+    @Override
+    protected void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -62,6 +75,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             default:
                 break;
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEventActivity(MessageEvent event) {
+        if (event.type == MessageEvent.SERVICE) {
+            Log.d("MyService", "Service Message Content: " + event.message);
+            EventBus.getDefault().post(new MessageEvent(MessageEvent.ACTIVITY, "Hello from Activity!"));
         }
     }
 
