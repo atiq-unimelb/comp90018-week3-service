@@ -18,12 +18,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private MyService.DownloadBinder downloadBinder;
 
+    // To ServiceConnection for monitoring the change of communication between Service and Activity
     private ServiceConnection connection = new ServiceConnection() {
 
+        // called when disconnected to Service
         @Override
         public void onServiceDisconnected(ComponentName name) {
         }
 
+        // called when connecting to Service
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             downloadBinder = (MyService.DownloadBinder) service;
@@ -45,11 +48,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bindService.setOnClickListener(this);
         unbindService.setOnClickListener(this);
 
+        // Register for EventBus Library
         EventBus.getDefault().register(this);
     }
 
     @Override
     protected void onStop() {
+        // Unregister to avoid Android OOM (out-of-memory)
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
@@ -78,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+//  Method to process when receiving MessageEvent
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEventActivity(MessageEvent event) {
         if (event.type == MessageEvent.SERVICE) {
